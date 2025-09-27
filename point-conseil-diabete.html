@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Point Conseil Diabète - SEN'Diabète</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root { --primary: #2E8B57; }
+        body { background: #f8f9fa; font-family: Arial, sans-serif; }
+        .navbar { background: var(--primary); }
+        .kpi-card { background: white; border-radius: 10px; padding: 15px; margin: 5px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .kpi-number { font-size: 1.5em; font-weight: bold; color: var(--primary); }
+        .patient-item { border-left: 4px solid var(--primary); padding-left: 15px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark">
+        <div class="container">
+            <span class="navbar-brand">💊 Point Conseil Diabète - Pharmacie</span>
+            <div>
+                <span class="me-3">Pharmacie Centrale</span>
+                <button class="btn btn-light btn-sm" onclick="logout()">Déconnexion</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- KPI Pharmacien -->
+        <div class="row">
+            <div class="col-md-2">
+                <div class="kpi-card">
+                    <div class="kpi-number" id="kpiPatientsPharma">24</div>
+                    <small>Patients suivis</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="kpi-card">
+                    <div class="kpi-number" id="kpiGlycemieMoy">1.4</div>
+                    <small>Glycémie moyenne</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="kpi-card">
+                    <div class="kpi-number" id="kpiAlertes">3</div>
+                    <small>Alertes actives</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="kpi-card">
+                    <div class="kpi-number" id="kpiReception">5</div>
+                    <small>Nouvelles glycémies</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="kpi-card">
+                    <div class="kpi-number" id="kpiOrdonnances">12</div>
+                    <small>Ordonnances</small>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="kpi-card">
+                    <div class="kpi-number" id="kpiRDV">2</div>
+                    <small>RDV à venir</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <!-- Colonne gauche : Patients et glycémies reçues -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between">
+                        <h5 class="mb-0">👥 Mes Patients Diabétiques</h5>
+                        <button class="btn btn-sm btn-primary" onclick="ajouterPatient()">+ Ajouter</button>
+                    </div>
+                    <div class="card-body">
+                        <div id="listePatients">
+                            <!-- Patients chargés dynamiquement -->
+                            <div class="patient-item">
+                                <strong>Moussa Diop</strong> (58 ans)
+                                <br><small>📞 77 123 45 67 | Dernière: 1.2 g/L (15/05)</small>
+                                <div class="mt-1">
+                                    <button class="btn btn-sm btn-outline-primary">📊 Suivi</button>
+                                    <button class="btn btn-sm btn-outline-success">💊 Ordonnance</button>
+                                </div>
+                            </div>
+                            <div class="patient-item">
+                                <strong>Aminata Sow</strong> (45 ans)
+                                <br><small>📞 77 234 56 78 | Dernière: 1.8 g/L (14/05)</small>
+                                <div class="mt-1">
+                                    <button class="btn btn-sm btn-outline-primary">📊 Suivi</button>
+                                    <button class="btn btn-sm btn-outline-success">💊 Ordonnance</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">📨 Glycémies Reçues</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <strong>Nouveau:</strong> Ibrahima Fall - 2.1 g/L<br>
+                            <small>Reçu aujourd'hui à 10:23</small>
+                            <button class="btn btn-sm btn-primary mt-1">👁️ Voir</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colonne droite : Gestion traitement et actions -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">💊 Gestion du Traitement</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="formTraitement">
+                            <div class="mb-3">
+                                <label class="form-label">Patient</label>
+                                <select class="form-select" required>
+                                    <option value="">Choisir un patient...</option>
+                                    <option>Moussa Diop</option>
+                                    <option>Aminata Sow</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Traitement actuel</label>
+                                <textarea class="form-control" rows="3" placeholder="Médicaments, posologie..."></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Ordonnance (photo)</label>
+                                <input type="file" class="form-control" accept="image/*">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Prochaine visite</label>
+                                <input type="date" class="form-control">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">💾 Enregistrer</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">⚠️ Alertes Patients</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-warning">
+                            <strong>Surveillance:</strong> Aminata Sow<br>
+                            <small>Glycémie à 1.8 g/L - À contrôler sous 7 jours</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+const API_URL = 'https://script.google.com/macros/s/VOTRE_DEPLOIEMENT_ID/exec';
+
+document.getElementById('formTraitement').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const donnees = {
+    action: 'visite_pharmacien',
+    id_patient: 'PAT_001', // À récupérer dynamiquement
+    nom_patient: document.querySelector('select option:checked').text,
+    glycemie: '1.8', // À récupérer du formulaire
+    traitement: document.querySelector('textarea').value,
+    prochaine_visite: document.querySelector('input[type="date"]').value,
+    pharmacie: 'Pharmacie Centrale'
+  };
+  
+  const resultat = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(donnees)
+  });
+  
+  const reponse = await resultat.json();
+  alert(reponse.status === 'success' ? '✅ Traitement enregistré!' : '❌ Erreur');
+});
+</script>
+    
+    <script>
+        function logout() {
+            if (confirm('Déconnexion du Point Conseil ?')) {
+                window.location.href = 'index.html';
+            }
+        }
+
+        function ajouterPatient() {
+            const nom = prompt('Nom du nouveau patient:');
+            if (nom) {
+                alert('Patient ' + nom + ' ajouté à la base');
+            }
+        }
+    </script>
+</body>
+</html>

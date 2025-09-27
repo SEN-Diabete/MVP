@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Médical - SEN'Diabète</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root { --primary: #2E8B57; }
+        body { background: #f8f9fa; }
+        .navbar { background: var(--primary); }
+        .kpi-card { background: white; border-radius: 10px; padding: 20px; margin: 10px; text-align: center; box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+        .kpi-number { font-size: 2em; font-weight: bold; color: var(--primary); }
+        .nav-tabs .nav-link.active { border-bottom: 3px solid var(--primary); font-weight: bold; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark">
+        <div class="container">
+            <span class="navbar-brand">🏥 Dashboard Médical SEN'Diabète</span>
+            <button class="btn btn-light btn-sm" onclick="logout()">Déconnexion</button>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- KPI Médecin -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div class="kpi-number">42</div>
+                    <div>Patients Diabétiques</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div class="kpi-number">5</div>
+                    <div>Cas Critiques</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div class="kpi-number">8</div>
+                    <div>RDV Aujourd'hui</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div class="kpi-number">15</div>
+                    <div>Glycémies Reçues</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Onglets -->
+        <ul class="nav nav-tabs mt-4" id="ongletsMedecin">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-target="#patients" data-bs-toggle="tab">👥 Patients</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-target="#ordonnances" data-bs-toggle="tab">💊 Ordonnances</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-target="#rdv" data-bs-toggle="tab">📅 Rendez-vous</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-target="#reception" data-bs-toggle="tab">📨 Réception</button>
+            </li>
+        </ul>
+
+        <div class="tab-content mt-3">
+            <!-- Onglet Patients -->
+            <div class="tab-pane fade show active" id="patients">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Gestion de la Patientèle</h5>
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Âge</th>
+                                    <th>Dernière glycémie</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Dr. Mamadou Diop</td>
+                                    <td>58 ans</td>
+                                    <td>1.2 g/L (15/05)</td>
+                                    <td><span class="badge bg-success">Contrôlé</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary">Dossier</button>
+                                        <button class="btn btn-sm btn-success">Ordonnance</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Mariama Bâ</td>
+                                    <td>62 ans</td>
+                                    <td>2.4 g/L (14/05)</td>
+                                    <td><span class="badge bg-warning">Surveillance</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary">Dossier</button>
+                                        <button class="btn btn-sm btn-success">Ordonnance</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onglet Ordonnances -->
+            <div class="tab-pane fade" id="ordonnances">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Génération d'Ordonnance</h5>
+                        <form>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Patient</label>
+                                        <select class="form-select">
+                                            <option>Dr. Mamadou Diop</option>
+                                            <option>Mariama Bâ</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Traitement</label>
+                                        <textarea class="form-control" rows="5" placeholder="Médicaments, posologie..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Instructions</label>
+                                        <textarea class="form-control" rows="3" placeholder="Recommandations..."></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Prochain contrôle</label>
+                                        <input type="date" class="form-control">
+                                    </div>
+                                    <button type="button" class="btn btn-primary">📄 Générer PDF</button>
+                                    <button type="button" class="btn btn-success">📱 Envoyer</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onglet Réception -->
+            <div class="tab-pane fade" id="reception">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Glycémies Reçues des Patients</h5>
+                        <div class="alert alert-info">
+                            <strong>Nouveau résultat:</strong> Ibrahima Fall - 2.1 g/L<br>
+                            <small>Envoyé le 15/05 à 10:23 - Commentaire: "Vertiges ce matin"</small>
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-primary">👁️ Voir détails</button>
+                                <button class="btn btn-sm btn-success">📅 Programmer RDV</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+const API_URL = 'https://script.google.com/macros/s/VOTRE_DEPLOIEMENT_ID/exec';
+
+// Pour la génération d'ordonnance
+function genererOrdonnance() {
+  const donnees = {
+    action: 'ordonnance_medecin',
+    id_patient: 'PAT_001',
+    nom_patient: document.querySelector('select option:checked').text,
+    medicaments: document.querySelector('textarea').value,
+    medecin: 'Dr. Mamadou Diop'
+  };
+  
+  // Envoyer à l'API...
+}
+</script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function logout() {
+            if (confirm('Déconnexion du Dashboard Médical ?')) {
+                window.location.href = 'index.html';
+            }
+        }
+    </script>
+</body>
+</html>

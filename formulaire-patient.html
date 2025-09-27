@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Envoi Glycémie - SEN'Diabète</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f0f8ff; font-family: Arial, sans-serif; }
+        .container { max-width: 500px; margin: 50px auto; }
+        .card { border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .btn-primary { background: #2E8B57; border: none; padding: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="text-center mb-4">
+            <h2 style="color: #2E8B57;">📤 Envoi de Glycémie</h2>
+            <p class="text-muted">Patients - Transmettez vos résultats</p>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <form id="formPatient">
+                    <div class="mb-3">
+                        <label class="form-label">📱 Votre téléphone</label>
+                        <input type="tel" class="form-control" placeholder="77 123 45 67" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">🔢 Valeur glycémie (g/L)</label>
+                        <input type="number" step="0.1" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">📍 Destination</label>
+                        <select class="form-select" required>
+                            <option value="">Choisir...</option>
+                            <option value="pharmacie">📊 Ma pharmacie</option>
+                            <option value="medecin">👨‍⚕️ Mon médecin</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">📝 Commentaires (optionnel)</label>
+                        <textarea class="form-control" rows="2" placeholder="Heure de mesure, symptômes..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">📸 Photo du lecteur (optionnel)</label>
+                        <input type="file" class="form-control" accept="image/*">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">🚀 Envoyer la glycémie</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="resultat" class="mt-3"></div>
+    </div>
+<script>
+const API_URL = 'https://script.google.com/macros/s/VOTRE_DEPLOIEMENT_ID/exec';
+
+document.getElementById('formPatient').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const donnees = {
+    action: 'envoi_patient',
+    telephone_patient: document.querySelector('input[type="tel"]').value,
+    glycemie: document.querySelector('input[type="number"]').value,
+    destination: document.querySelector('select').value,
+    commentaires: document.querySelector('textarea').value
+  };
+  
+  const resultat = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(donnees)
+  });
+  
+  const reponse = await resultat.json();
+  alert(reponse.status === 'success' ? '✅ Succès!' : '❌ Erreur');
+});
+</script>
+    
+    <script>
+        document.getElementById('formPatient').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const button = this.querySelector('button');
+            button.innerHTML = '⏳ Envoi...';
+            button.disabled = true;
+
+            // Simulation envoi
+            setTimeout(() => {
+                document.getElementById('resultat').innerHTML = 
+                    '<div class="alert alert-success">✅ Glycémie envoyée avec succès!</div>';
+                this.reset();
+                button.innerHTML = '🚀 Envoyer la glycémie';
+                button.disabled = false;
+            }, 1500);
+        });
+    </script>
+</body>
+</html>

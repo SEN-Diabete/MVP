@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEN'Diabète - Suivi du Diabète au Sénégal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2E8B57;
+            --secondary-color: #1E6B45;
+            --accent-color: #FF6B35;
+            --light-color: #F8F9FA;
+            --dark-color: #343A40;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .login-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            margin-top: 50px;
+        }
+        
+        .dashboard {
+            display: none;
+            background: white;
+            min-height: 100vh;
+        }
+        
+        .navbar-custom {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+        
+        .card-custom {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .card-custom:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+        
+        .kpi-card {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .status-good { background-color: #28a745; }
+        .status-warning { background-color: #ffc107; }
+        .status-critical { background-color: #dc3545; }
+        
+        .btn-primary-custom {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+        }
+        
+        .btn-primary-custom:hover {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            transform: translateY(-2px);
+        }
+        
+        .alert-pill {
+            border-radius: 20px;
+            padding: 5px 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .tab-content {
+            background: white;
+            border-radius: 0 0 15px 15px;
+            padding: 30px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+    <!-- Page de Connexion -->
+    <div id="loginPage" class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="login-container">
+                    <div class="text-center mb-5">
+                        <h1 class="fw-bold" style="color: var(--primary-color);">
+                            <i class="fas fa-heartbeat me-2"></i>SEN'Diabète
+                        </h1>
+                        <p class="text-muted">Suivi du Diabète au Sénégal</p>
+                    </div>
+                    
+                    <div class="card card-custom">
+                        <div class="card-header bg-white border-0 pt-4">
+                            <ul class="nav nav-pills nav-justified" role="tablist">
+                                <li class="nav-item">
+                                    <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#pharmacien">
+                                        <i class="fas fa-prescription-bottle me-2"></i>Pharmacien
+                                    </button>
+                                </li>
+                                <li class="nav-item">
+                                    <button class="nav-link" data-bs-toggle="pill" data-bs-target="#medecin">
+                                        <i class="fas fa-user-md me-2"></i>Médecin
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="card-body">
+                            <div class="tab-content">
+                                <!-- Connexion Pharmacien -->
+                                <div class="tab-pane fade show active" id="pharmacien">
+                                    <form id="loginPharmacien">
+                                        <div class="mb-3">
+                                            <label class="form-label">Numéro de téléphone</label>
+                                            <input type="tel" class="form-control" placeholder="77 123 45 67" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Mot de passe</label>
+                                            <input type="password" class="form-control" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary-custom w-100">
+                                            <i class="fas fa-sign-in-alt me-2"></i>Se connecter
+                                        </button>
+                                    </form>
+                                </div>
+                                
+                                <!-- Connexion Médecin -->
+                                <div class="tab-pane fade" id="medecin">
+                                    <form id="loginMedecin">
+                                        <div class="mb-3">
+                                            <label class="form-label">Numéro de téléphone</label>
+                                            <input type="tel" class="form-control" placeholder="77 123 45 67" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Mot de passe</label>
+                                            <input type="password" class="form-control" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary-custom w-100">
+                                            <i class="fas fa-sign-in-alt me-2"></i>Se connecter
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <small class="text-muted">MVP SEN'Diabète - Déployé sur GitHub Pages</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Pharmacien -->
+    <div id="dashboardPharmacien" class="dashboard">
+        <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+            <div class="container">
+                <span class="navbar-brand fw-bold">
+                    <i class="fas fa-prescription-bottle me-2"></i>SEN'Diabète - Pharmacien
+                </span>
+                <button class="btn btn-light btn-sm" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-1"></i>Déconnexion
+                </button>
+            </div>
+        </nav>
+
+        <div class="container mt-4">
+            <!-- KPI -->
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card card-custom kpi-card">
+                        <div class="card-body text-center">
+                            <h2 id="kpiPatients">0</h2>
+                            <p>Patients suivis</p>
+                            <i class="fas fa-users fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card card-custom kpi-card">
+                        <div class="card-body text-center">
+                            <h2 id="kpiVisites">0</h2>
+                            <p>Visites ce mois</p>
+                            <i class="fas fa-calendar-check fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card card-custom kpi-card">
+                        <div class="card-body text-center">
+                            <h2 id="kpiGlycemie">0.0</h2>
+                            <p>Glycémie moyenne</p>
+                            <i class="fas fa-tachometer-alt fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card card-custom kpi-card">
+                        <div class="card-body text-center">
+                            <h2 id="kpiAlertes">0</h2>
+                            <p>Alertes actives</p>
+                            <i class="fas fa-exclamation-triangle fa-2x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenu principal -->
+            <div class="row mt-4">
+                <div class="col-md-8">
+                    <div class="card card-custom">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0"><i class="fas fa-list me-2"></i>Liste des patients</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Patient</th>
+                                            <th>Dernière visite</th>
+                                            <th>Glycémie</th>
+                                            <th>Statut</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tablePatients">
+                                        <!-- Données chargées par JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <!-- Alertes -->
+                    <div class="card card-custom">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0"><i class="fas fa-bell me-2"></i>Alertes récentes</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="listeAlertes">
+                                <!-- Alertes chargées par JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Nouvelle visite -->
+                    <div class="card card-custom mt-4">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Nouvelle visite</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="formVisite">
+                                <div class="mb-3">
+                                    <label class="form-label">Patient</label>
+                                    <select class="form-select" required>
+                                        <option value="">Choisir un patient...</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Glycémie (g/L)</label>
+                                    <input type="number" step="0.1" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Observations</label>
+                                    <textarea class="form-control" rows="3"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary-custom w-100">
+                                    <i class="fas fa-save me-2"></i>Enregistrer
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Médecin -->
+    <div id="dashboardMedecin" class="dashboard">
+        <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+            <div class="container">
+                <span class="navbar-brand fw-bold">
+                    <i class="fas fa-user-md me-2"></i>SEN'Diabète - Médecin
+                </span>
+                <button class="btn btn-light btn-sm" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-1"></i>Déconnexion
+                </button>
+            </div>
+        </nav>
+
+        <div class="container mt-4">
+            <!-- KPI Médecin -->
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card card-custom kpi-card">
+                        <div class="card-body text-center">
+                            <h2 id="kpiPatientsMed">0</h2>
+                            <p>Patients suivis</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card card-custom kpi-card">
+                        <div class="card-body text-center">
+                            <h2 id="kpiCritiques">0</h2>
+                            <p>Patients critiques</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card card-custom kpi-card">
+                        <div class="card-body text-center">
+                            <h2 id="kpiRDV">0</h2>
+                            <p>RDV aujourd'hui</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onglets Médecin -->
+            <ul class="nav nav-tabs mt-4" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#patients">
+                        <i class="fas fa-users me-2"></i>Patients
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#rdv">
+                        <i class="fas fa-calendar me-2"></i>Rendez-vous
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#ordonnances">
+                        <i class="fas fa-file-prescription me-2"></i>Ordonnances
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- Onglet Patients -->
+                <div class="tab-pane fade show active" id="patients">
+                    <div class="card card-custom mt-3">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Gestion des patients</h5>
+                            <button class="btn btn-primary-custom btn-sm">
+                                <i class="fas fa-plus me-2"></i>Nouveau patient
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Patient</th>
+                                        <th>Âge</th>
+                                        <th>Dernière visite</th>
+                                        <th>Glycémie</th>
+                                        <th>Statut</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablePatientsMed">
+                                    <!-- Données chargées par JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Onglet Rendez-vous -->
+                <div class="tab-pane fade" id="rdv">
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="card card-custom">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">Rendez-vous à venir</h5>
+                                </div>
+                                <div class="card-body" id="listeRDV">
+                                    <!-- RDV chargés par JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card card-custom">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0">Nouveau rendez-vous</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="formRDV">
+                                        <div class="mb-3">
+                                            <label class="form-label">Patient</label>
+                                            <select class="form-select" required>
+                                                <option value="">Choisir un patient...</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Date</label>
+                                            <input type="date" class="form-control" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Heure</label>
+                                            <input type="time" class="form-control" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary-custom w-100">
+                                            Programmer le RDV
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Onglet Ordonnances -->
+                <div class="tab-pane fade" id="ordonnances">
+                    <div class="card card-custom mt-3">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0">Générer une ordonnance</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="formOrdonnance">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Patient</label>
+                                            <select class="form-select" required>
+                                                <option value="">Choisir un patient...</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Médicaments</label>
+                                            <textarea class="form-control" rows="4" required></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Instructions</label>
+                                            <textarea class="form-control" rows="4"></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary-custom me-2">
+                                            Générer l'ordonnance
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary">
+                                            Imprimer
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+const API_URL = 'https://script.google.com/macros/s/VOTRE_DEPLOIEMENT_ID/exec';
+
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const donnees = {
+    action: 'login',
+    telephone: document.querySelector('input[type="tel"]').value
+  };
+  
+  const resultat = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(donnees)
+  });
+  
+  const reponse = await resultat.json();
+  if (reponse.status === 'success') {
+    // Rediriger vers la bonne page
+    if (reponse.user.type === 'Pharmacien') {
+      window.location.href = 'point-conseil.html';
+    } else {
+      window.location.href = 'dashboard-medical.html';
+    }
+  }
+});
+</script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Données simulées pour le MVP
+        const donneesTest = {
+            pharmacien: {
+                patients: 142,
+                visitesMois: 28,
+                glycemieMoyenne: 1.4,
+                alertes: 3,
+                listePatients: [
+                    { nom: "Moussa Diop", visite: "15/05/2023", glycemie: 1.2, statut: "good" },
+                    { nom: "Aminata Sow", visite: "14/05/2023", glycemie: 1.8, statut: "warning" },
+                    { nom: "Ibrahima Fall", visite: "12/05/2023", glycemie: 2.1, statut: "critical" }
+                ],
+                alertes: [
+                    { patient: "Ibrahima Fall", message: "Glycémie élevée (2.1 g/L)", urgent: true },
+                    { patient: "Aminata Sow", message: "Glycémie à surveiller", urgent: false }
+                ]
+            },
+            medecin: {
+                patients: 42,
+                critiques: 5,
+                rdvAujourdhui: 3,
+                listePatients: [
+                    { nom: "Moussa Diop", age: 58, visite: "15/05/2023", glycemie: 1.2, statut: "good" },
+                    { nom: "Aminata Sow", age: 45, visite: "14/05/2023", glycemie: 1.8, statut: "warning" },
+                    { nom: "Ibrahima Fall", age: 62, visite: "12/05/2023", glycemie: 2.1, statut: "critical" }
+                ],
+                rdv: [
+                    { patient: "Moussa Diop", date: "20/05/2023 10:00", motif: "Contrôle routine" },
+                    { patient: "Aminata Sow", date: "20/05/2023 11:30", motif: "Suivi glycémie" }
+                ]
+            }
+        };
+
+        // Gestion de l'authentification
+        document.getElementById('loginPharmacien').addEventListener('submit', function(e) {
+            e.preventDefault();
+            chargerDashboard('pharmacien');
+        });
+
+        document.getElementById('loginMedecin').addEventListener('submit', function(e) {
+            e.preventDefault();
+            chargerDashboard('medecin');
+        });
+
+        function chargerDashboard(type) {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('dashboard' + type.charAt(0).toUpperCase() + type.slice(1)).style.display = 'block';
+            
+            if (type === 'pharmacien') {
+                initialiserDashboardPharmacien();
+            } else {
+                initialiserDashboardMedecin();
+            }
+        }
+
+        function logout() {
+            document.querySelectorAll('.dashboard').forEach(dash => {
+                dash.style.display = 'none';
+            });
+            document.getElementById('loginPage').style.display = 'block';
+        }
+
+        function initialiserDashboardPharmacien() {
+            // Mettre à jour les KPI
+            document.getElementById('kpiPatients').textContent = donneesTest.pharmacien.patients;
+            document.getElementById('kpiVisites').textContent = donneesTest.pharmacien.visitesMois;
+            document.getElementById('kpiGlycemie').textContent = donneesTest.pharmacien.glycemieMoyenne;
+            document.getElementById('kpiAlertes').textContent = donneesTest.pharmacien.alertes;
+
+            // Remplir la table des patients
+            const tbody = document.getElementById('tablePatients');
+            tbody.innerHTML = donneesTest.pharmacien.listePatients.map(patient => `
+                <tr>
+                    <td>${patient.nom}</td>
+                    <td>${patient.visite}</td>
+                    <td>${patient.glycemie} g/L</td>
+                    <td>
+                        <span class="status-indicator status-${patient.statut}"></span>
+                        ${patient.statut === 'good' ? 'Contrôlé' : patient.statut === 'warning' ? 'À surveiller' : 'Critique'}
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary">Détails</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Remplir les alertes
+            const alertesDiv = document.getElementById('listeAlertes');
+            alertesDiv.innerHTML = donneesTest.pharmacien.alertes.map(alerte => `
+                <div class="alert ${alerte.urgent ? 'alert-danger' : 'alert-warning'} alert-pill d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>${alerte.patient}</strong><br>
+                        <small>${alerte.message}</small>
+                    </div>
+                    ${alerte.urgent ? '<span class="badge bg-danger">URGENT</span>' : ''}
+                </div>
+            `).join('');
+        }
+
+        function initialiserDashboardMedecin() {
+            // Mettre à jour les KPI
+            document.getElementById('kpiPatientsMed').textContent = donneesTest.medecin.patients;
+            document.getElementById('kpiCritiques').textContent = donneesTest.medecin.critiques;
+            document.getElementById('kpiRDV').textContent = donneesTest.medecin.rdvAujourdhui;
+
+            // Remplir la table des patients
+            const tbody = document.getElementById('tablePatientsMed');
+            tbody.innerHTML = donneesTest.medecin.listePatients.map(patient => `
+                <tr>
+                    <td>${patient.nom}</td>
+                    <td>${patient.age} ans</td>
+                    <td>${patient.visite}</td>
+                    <td>${patient.glycemie} g/L</td>
+                    <td>
+                        <span class="status-indicator status-${patient.statut}"></span>
+                        ${patient.statut === 'good' ? 'Contrôlé' : patient.statut === 'warning' ? 'À surveiller' : 'Critique'}
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1">Dossier</button>
+                        <button class="btn btn-sm btn-outline-success">Ordonnance</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Remplir les RDV
+            const rdvDiv = document.getElementById('listeRDV');
+            rdvDiv.innerHTML = donneesTest.medecin.rdv.map(rdv => `
+                <div class="border-bottom pb-2 mb-2">
+                    <div class="d-flex justify-content-between">
+                        <strong>${rdv.patient}</strong>
+                        <span class="text-primary">${rdv.date}</span>
+                    </div>
+                    <small class="text-muted">${rdv.motif}</small>
+                </div>
+            `).join('');
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Définir la date d'aujourd'hui comme valeur par défaut
+            const aujourdhui = new Date().toISOString().split('T')[0];
+            document.querySelectorAll('input[type="date"]').forEach(input => {
+                input.value = aujourdhui;
+            });
+        });
+    </script>
+</body>
+</html>

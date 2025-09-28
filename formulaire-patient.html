@@ -74,58 +74,8 @@
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbwktHf6luBoFjg35oAMyzFD3DrIXy7pObmkiP5k3nG3xffw3jIJPUJVF3Ef3_BAbt2Z/exec';
 
-// Solution sans CORS - utilisation de Google Forms comme proxy
-function envoyerAvecGoogleForms(donnees) {
-  return new Promise((resolve, reject) => {
-    // Créer un formulaire Google Forms comme proxy
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = API_URL;
-    form.target = 'hiddenFrame';
-    
-    // Ajouter les données comme champs cachés
-    Object.keys(donnees).forEach(key => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = key;
-      input.value = typeof donnees[key] === 'object' ? JSON.stringify(donnees[key]) : donnees[key];
-      form.appendChild(input);
-    });
-    
-    // Créer un iframe caché pour la réponse
-    const iframe = document.createElement('iframe');
-    iframe.name = 'hiddenFrame';
-    iframe.style.display = 'none';
-    iframe.onload = function() {
-      try {
-        // Essayer de récupérer la réponse
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-        const responseText = iframeDoc.body.innerText;
-        
-        if (responseText) {
-          const response = JSON.parse(responseText);
-          resolve(response);
-        } else {
-          resolve({status: 'success', message: 'Données envoyées (méthode fallback)'});
-        }
-      } catch (error) {
-        resolve({status: 'success', message: 'Données envoyées (méthode fallback)'});
-      }
-      
-      // Nettoyer
-      document.body.removeChild(form);
-      document.body.removeChild(iframe);
-    };
-    
-    document.body.appendChild(iframe);
-    document.body.appendChild(form);
-    form.submit();
-  });
-}
-
 document.getElementById('formPatient').addEventListener('submit', async function(e) {
   e.preventDefault();
-  console.log('📤 Début envoi formulaire...');
   
   const button = this.querySelector('button');
   button.innerHTML = '⏳ Envoi en cours...';
@@ -140,8 +90,6 @@ document.getElementById('formPatient').addEventListener('submit', async function
   const tension = document.querySelector('input[placeholder*="120/80"]')?.value || '';
   const poids = document.querySelector('input[placeholder*="75.5"]')?.value || '';
 
-  console.log('📊 Données:', { telephone, glycemie, destination, commentaires, id_patient, tension, poids });
-
   const donnees = {
     action: 'envoi_patient',
     telephone_patient: telephone,
@@ -154,51 +102,29 @@ document.getElementById('formPatient').addEventListener('submit', async function
   };
 
   try {
-    console.log('🔄 Envoi via méthode alternative...');
-    const reponse = await envoyerAvecGoogleForms(donnees);
-    console.log('📨 Réponse:', reponse);
+    const resultat = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(donnees)
+    });
+    
+    const reponse = await resultat.json();
     
     if (reponse.status === 'success') {
       document.getElementById('resultat').innerHTML = 
-        '<div class="alert alert-success">✅ Données envoyées avec succès!<br><small>Ligne ajoutée dans Sheets</small></div>';
+        '<div class="alert alert-success">✅ Données envoyées avec succès!</div>';
       this.reset();
     } else {
       document.getElementById('resultat').innerHTML = 
-        '<div class="alert alert-danger">❌ Erreur: ' + (reponse.message || 'Erreur inconnue') + '</div>';
+        '<div class="alert alert-danger">❌ Erreur: ' + reponse.message + '</div>';
     }
   } catch (error) {
-    console.error('❌ Erreur:', error);
     document.getElementById('resultat').innerHTML = 
-      '<div class="alert alert-danger">❌ Erreur d\'envoi: ' + error.message + '</div>';
+      '<div class="alert alert-danger">❌ Erreur de connexion</div>';
   }
 
   button.innerHTML = '🚀 Envoyer la glycémie';
   button.disabled = false;
-});
-
-// Validation glycémie
-document.querySelector('input[type="number"]').addEventListener('change', function() {
-  const valeur = parseFloat(this.value);
-  const message = document.getElementById('validationMessage');
-  
-  if (!message) {
-    const newMessage = document.createElement('div');
-    newMessage.id = 'validationMessage';
-    newMessage.className = 'mt-2';
-    this.parentNode.appendChild(newMessage);
-  }
-  
-  const messageElement = document.getElementById('validationMessage');
-  
-  if (valeur < 0.6) {
-    messageElement.innerHTML = '<div class="alert alert-danger">⚠️ <strong>URGENCE HYPOGLYCÉMIQUE</strong><br>Contactez immédiatement votre médecin!</div>';
-  } else if (valeur > 2.5) {
-    messageElement.innerHTML = '<div class="alert alert-warning">⚠️ <strong>Glycémie élevée</strong><br>Surveillance recommandée</div>';
-  } else if (valeur >= 0.7 && valeur <= 1.2) {
-    messageElement.innerHTML = '<div class="alert alert-success">✅ <strong>Glycémie normale</strong></div>';
-  } else {
-    messageElement.innerHTML = '';
-  }
 });
 </script>
 </body>

@@ -76,76 +76,65 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbwktHf6luBoFjg35oAMyzFD
 
 document.getElementById('formPatient').addEventListener('submit', async function(e) {
   e.preventDefault();
+  console.log('📤 Début envoi formulaire...');
   
   const button = this.querySelector('button');
   button.innerHTML = '⏳ Envoi en cours...';
   button.disabled = true;
 
-  const inputs = this.querySelectorAll('input, select, textarea');
+  // Récupération des données
+  const telephone = document.querySelector('input[type="tel"]').value;
+  const glycemie = parseFloat(document.querySelector('input[type="number"]').value);
+  const destination = document.querySelector('select').value;
+  const commentaires = document.querySelector('textarea').value;
+  const id_patient = document.querySelector('input[placeholder*="PAT_001"]')?.value || '';
+  const tension = document.querySelector('input[placeholder*="120/80"]')?.value || '';
+  const poids = document.querySelector('input[placeholder*="75.5"]')?.value || '';
+
+  console.log('📊 Données:', { telephone, glycemie, destination, commentaires, id_patient, tension, poids });
+
   const donnees = {
     action: 'envoi_patient',
-    telephone_patient: document.querySelector('input[type="tel"]').value,
-    glycemie: parseFloat(document.querySelector('input[type="number"]').value),
-    destination: document.querySelector('select').value,
-    commentaires: document.querySelector('textarea').value,
-    id_patient: document.querySelector('input[placeholder*="PAT_001"]')?.value || '',
-    tension: document.querySelector('input[placeholder*="120/80"]')?.value || '',
-    poids: document.querySelector('input[placeholder*="75.5"]')?.value || '',
-    timestamp: new Date().toISOString()
+    telephone_patient: telephone,
+    glycemie: glycemie,
+    destination: destination,
+    commentaires: commentaires,
+    id_patient: id_patient,
+    tension: tension,
+    poids: poids
   };
 
   try {
+    console.log('🔄 Envoi vers API...');
     const resultat = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(donnees)
     });
     
+    console.log('✅ Réponse reçue');
     const reponse = await resultat.json();
+    console.log('📨 Réponse API:', reponse);
     
     if (reponse.status === 'success') {
       document.getElementById('resultat').innerHTML = 
-        '<div class="alert alert-success">✅ Données envoyées avec succès!<br><small>Vous recevrez un retour sous 24h</small></div>';
+        '<div class="alert alert-success">✅ Données envoyées avec succès!<br><small>Ligne ajoutée dans Sheets</small></div>';
       this.reset();
-      
-      setTimeout(() => {
-        document.getElementById('resultat').innerHTML = '';
-      }, 5000);
-      
     } else {
       document.getElementById('resultat').innerHTML = 
-        '<div class="alert alert-danger">❌ Erreur: ' + reponse.message + '</div>';
+        '<div class="alert alert-danger">❌ Erreur API: ' + reponse.message + '</div>';
     }
   } catch (error) {
+    console.error('❌ Erreur fetch:', error);
     document.getElementById('resultat').innerHTML = 
-      '<div class="alert alert-danger">❌ Erreur de connexion. Vérifiez votre internet.</div>';
-  }
-
-  button.innerHTML = '🚀 Envoyer la glycémie';
-  button.disabled = false;
-});
-      // Réinitialiser le formulaire
-      this.reset();
-      
-      // Option: Rediriger vers une page de confirmation
-      setTimeout(() => {
-        document.getElementById('resultat').innerHTML = '';
-      }, 5000);
-      
-    } else {
-      document.getElementById('resultat').innerHTML = 
-        '<div class="alert alert-danger">❌ Erreur: ' + reponse.message + '</div>';
-    }
-  } catch (error) {
-    document.getElementById('resultat').innerHTML = 
-      '<div class="alert alert-danger">❌ Erreur de connexion. Vérifiez votre internet.</div>';
+      '<div class="alert alert-danger">❌ Erreur réseau: ' + error.message + '</div>';
   }
 
   button.innerHTML = '🚀 Envoyer la glycémie';
   button.disabled = false;
 });
 
-// Validation en temps réel
+// Validation glycémie
 document.querySelector('input[type="number"]').addEventListener('change', function() {
   const valeur = parseFloat(this.value);
   const message = document.getElementById('validationMessage');
@@ -169,6 +158,6 @@ document.querySelector('input[type="number"]').addEventListener('change', functi
     messageElement.innerHTML = '';
   }
 });
-    </script>
+</script>
 </body>
 </html>

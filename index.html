@@ -488,20 +488,34 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     telephone: document.querySelector('input[type="tel"]').value
   };
   
-  const resultat = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(donnees)
-  });
-  
-  const reponse = await resultat.json();
-  if (reponse.status === 'success') {
-    // Rediriger vers la bonne page
-    if (reponse.user.type === 'Pharmacien') {
-      window.location.href = 'point-conseil.html';
+  try {
+    const resultat = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(donnees)
+    });
+    
+    const reponse = await resultat.json();
+    
+    if (reponse.status === 'success') {
+      // Stocker les infos utilisateur
+      localStorage.setItem('user', JSON.stringify(reponse.user));
+      
+      // REDIRECTION SELON LE TYPE D'UTILISATEUR
+      if (reponse.user.type === 'Admin') {
+        window.location.href = 'point-conseil.html'; // Ou dashboard-medical.html
+      } else if (reponse.user.type === 'Pharmacien') {
+        window.location.href = 'point-conseil.html';
+      } else if (reponse.user.type === 'Médecin') {
+        window.location.href = 'dashboard-medical.html';
+      } else {
+        window.location.href = 'point-conseil.html'; // Par défaut
+      }
     } else {
-      window.location.href = 'dashboard-medical.html';
+      alert('Erreur: ' + reponse.message);
     }
+  } catch (error) {
+    alert('Erreur de connexion au serveur');
   }
 });
 </script>

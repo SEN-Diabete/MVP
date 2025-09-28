@@ -170,6 +170,30 @@
     <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbwktHf6luBoFjg35oAMyzFD3DrIXy7pObmkiP5k3nG3xffw3jIJPUJVF3Ef3_BAbt2Z/exec';
 
+// VÉRIFICATION DE CONNEXION
+document.addEventListener('DOMContentLoaded', function() {
+  const user = JSON.parse(localStorage.getItem('user'));
+  
+  if (!user || !user.id) {
+    window.location.href = 'index.html';
+    return;
+  }
+  
+  chargerDonneesMedecin();
+});
+
+function chargerDonneesMedecin() {
+  // Simulation des données
+  document.getElementById('kpiPatients').textContent = '42';
+  document.getElementById('kpiVisites').textContent = '15';
+  document.getElementById('kpiAlertes').textContent = '3';
+  document.getElementById('kpiRDV').textContent = '2';
+}
+
+function logout() {
+  localStorage.removeItem('user');
+  window.location.href = 'index.html';
+}
 // Pour la génération d'ordonnance
 function genererOrdonnance() {
   const donnees = {

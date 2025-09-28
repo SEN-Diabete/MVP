@@ -162,7 +162,7 @@
     <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbwktHf6luBoFjg35oAMyzFD3DrIXy7pObmkiP5k3nG3xffw3jIJPUJVF3Ef3_BAbt2Z/exec';
 
-// VÉRIFICATION DE CONNEXION AU CHARGEMENT
+// VÉRIFICATION DE CONNEXION
 document.addEventListener('DOMContentLoaded', function() {
   const user = JSON.parse(localStorage.getItem('user'));
   
@@ -171,73 +171,164 @@ document.addEventListener('DOMContentLoaded', function() {
     return;
   }
   
-  // Afficher les infos utilisateur
-  console.log('Utilisateur connecté:', user);
-  
-  // CHARGER LA LISTE DES PATIENTS
-  chargerListePatients();
+  // CHARGER TOUTES LES DONNÉES DYNAMIQUES
+  chargerDonneesDynamiques();
 });
 
-// FONCTION POUR CHARGER LES PATIENTS
-function chargerListePatients() {
-  // Simulation - À remplacer par appel API réel
-  const patients = [
-    { id: 'PAT_001', nom: 'Moussa Diop', telephone: '771234567' },
-    { id: 'PAT_002', nom: 'Aminata Sow', telephone: '772345678' },
-    { id: 'PAT_003', nom: 'Ibrahima Fall', telephone: '773456789' }
-  ];
-  
-  // Mettre à jour la liste des patients
+// CHARGEMENT DYNAMIQUE DE TOUTES LES DONNÉES
+async function chargerDonneesDynamiques() {
+  try {
+    // 1. Charger les KPI
+    await chargerKPI();
+    
+    // 2. Charger la liste des patients
+    await chargerPatients();
+    
+    // 3. Charger les glycémies reçues
+    await chargerGlycemiesRecues();
+    
+  } catch (error) {
+    console.error('Erreur chargement données:', error);
+  }
+}
+
+// CHARGER LES KPI DYNAMIQUES
+async function chargerKPI() {
+  try {
+    const response = await fetch(API_URL + '?action=get_kpi_pharmacien');
+    const result = await response.json();
+    
+    if (result.status === 'success') {
+      document.getElementById('kpiPatientsPharma').textContent = result.data.patients;
+      document.getElementById('kpiVisites').textContent = result.data.visites7j;
+      document.getElementById('kpiGlycemieMoy').textContent = result.data.glycemieMoyenne;
+    }
+  } catch (error) {
+    console.error('Erreur KPI:', error);
+  }
+}
+
+// CHARGER LA LISTE DES PATIENTS DYNAMIQUE
+async function chargerPatients() {
+  try {
+    const response = await fetch(API_URL + '?action=get_patients');
+    const result = await response.json();
+    
+    if (result.status === 'success') {
+      mettreAJourListePatients(result.data);
+    }
+  } catch (error) {
+    console.error('Erreur patients:', error);
+  }
+}
+
+// METTRE À JOUR LA LISTE DES PATIENTS
+function mettreAJourListePatients(patients) {
+  // Mettre à jour le select du formulaire
   const selectPatient = document.querySelector('#formTraitement select');
   if (selectPatient) {
     selectPatient.innerHTML = '<option value="">Choisir un patient...</option>';
     patients.forEach(patient => {
       const option = document.createElement('option');
       option.value = patient.id;
-      option.textContent = patient.nom + ' (' + patient.telephone + ')';
+      option.textContent = patient.nom + (patient.telephone ? ' (' + patient.telephone + ')' : '');
       selectPatient.appendChild(option);
     });
   }
   
-  // Mettre à jour la liste dans la section patients
+  // Mettre à jour la liste affichée
   const listePatients = document.getElementById('listePatients');
   if (listePatients) {
-    listePatients.innerHTML = patients.map(patient => `
-      <div class="patient-item">
-        <strong>${patient.nom}</strong> 
-        <br><small>📞 ${patient.telephone}</small>
-        <div class="mt-1">
-          <button class="btn btn-sm btn-outline-primary" onclick="voirPatient('${patient.id}')">📊 Suivi</button>
-          <button class="btn btn-sm btn-outline-success" onclick="creerOrdonnance('${patient.id}')">💊 Ordonnance</button>
+    if (patients.length === 0) {
+      listePatients.innerHTML = '<div class="alert alert-info">Aucun patient dans la base</div>';
+    } else {
+      listePatients.innerHTML = patients.map(patient => `
+        <div class="patient-item">
+          <strong>${patient.nom}</strong> 
+          ${patient.telephone ? '<br><small>📞 ' + patient.telephone + '</small>' : ''}
+          ${patient.age ? '<br><small>👤 ' + patient.age + ' ans</small>' : ''}
+          <div class="mt-1">
+            <button class="btn btn-sm btn-outline-primary" onclick="voirPatient('${patient.id}')">📊 Suivi</button>
+            <button class="btn btn-sm btn-outline-success" onclick="creerOrdonnance('${patient.id}')">💊 Ordonnance</button>
+          </div>
         </div>
+      `).join('');
+    }
+  }
+}
+
+// CHARGER LES GLYCÉMIES REÇUES DYNAMIQUES
+async function chargerGlycemiesRecues() {
+  try {
+    const response = await fetch(API_URL + '?action=get_glycemies');
+    const result = await response.json();
+    
+    if (result.status === 'success') {
+      mettreAJourGlycemiesRecues(result.data);
+    }
+  } catch (error) {
+    console.error('Erreur glycémies:', error);
+  }
+}
+
+// METTRE À JOUR LES GLYCÉMIES REÇUES
+function mettreAJourGlycemiesRecues(glycemies) {
+  const container = document.querySelector('.card .card-body'); // À adapter au bon sélecteur
+  
+  if (glycemies.length === 0) {
+    container.innerHTML = '<div class="alert alert-info">Aucune nouvelle glycémie reçue</div>';
+  } else {
+    container.innerHTML = glycemies.map(glycemie => `
+      <div class="alert alert-info">
+        <strong>Nouveau:</strong> ${glycemie.patient} - ${glycemie.glycemie} g/L<br>
+        <small>Reçu le ${new Date(glycemie.date).toLocaleDateString()}</small>
+        ${glycemie.commentaire ? '<br><small>💬 ' + glycemie.commentaire + '</small>' : ''}
+        <button class="btn btn-sm btn-primary mt-1" onclick="traiterGlycemie('${glycemie.patient}')">👁️ Voir</button>
       </div>
     `).join('');
   }
 }
 
-// FONCTIONS DES BOUTONS
+// FONCTIONS DES BOUTONS (DYNAMIQUES)
 function ajouterPatient() {
   const nom = prompt('Nom du nouveau patient:');
   const telephone = prompt('Téléphone du patient:');
+  const age = prompt('Âge du patient:');
   
-  if (nom && telephone) {
+  if (nom) {
     // Ici, appeler l'API pour ajouter le patient
-    alert('Patient ' + nom + ' ajouté avec succès!');
-    chargerListePatients(); // Recharger la liste
+    const donnees = {
+      action: 'ajouter_patient',
+      nom: nom,
+      telephone: telephone,
+      age: age
+    };
+    
+    // Envoyer à l'API (à implémenter)
+    alert('Patient ' + nom + ' ajouté!');
+    chargerPatients(); // Recharger la liste
   }
 }
 
 function voirPatient(patientId) {
   alert('Ouvrir le dossier du patient: ' + patientId);
-  // Rediriger vers une page de détail ou ouvrir un modal
+  // Ici, rediriger vers une page de détail ou ouvrir un modal avec les données du patient
 }
 
 function creerOrdonnance(patientId) {
   const patientSelect = document.querySelector('#formTraitement select');
   if (patientSelect) {
-    patientSelect.value = patientId;
-    alert('Patient sélectionné pour ordonnance!');
+    const option = Array.from(patientSelect.options).find(opt => opt.value === patientId);
+    if (option) {
+      patientSelect.value = patientId;
+      alert('Patient ' + option.text + ' sélectionné pour ordonnance!');
+    }
   }
+}
+
+function traiterGlycemie(patientNom) {
+  alert('Traiter la glycémie de: ' + patientNom);
+  // Ici, logique pour traiter la glycémie reçue
 }
 
 // GESTION DU FORMULAIRE DE TRAITEMENT
@@ -259,7 +350,7 @@ document.getElementById('formTraitement').addEventListener('submit', async funct
     nom_patient: patientSelect.options[patientSelect.selectedIndex].text,
     traitement: traitementTextarea.value,
     prochaine_visite: dateInput.value,
-    pharmacie: 'Pharmacie Centrale' // À récupérer de l'utilisateur connecté
+    pharmacie: 'Pharmacie Centrale'
   };
   
   try {
@@ -274,6 +365,7 @@ document.getElementById('formTraitement').addEventListener('submit', async funct
     
     if (reponse.status === 'success') {
       this.reset();
+      chargerDonneesDynamiques(); // Recharger les données
     }
   } catch (error) {
     alert('❌ Erreur de connexion');
@@ -283,43 +375,7 @@ document.getElementById('formTraitement').addEventListener('submit', async funct
 function logout() {
   localStorage.removeItem('user');
   window.location.href = 'index.html';
-}      
-document.getElementById('formTraitement').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  
-  const donnees = {
-    action: 'visite_pharmacien',
-    id_patient: 'PAT_001', // À récupérer dynamiquement
-    nom_patient: document.querySelector('select option:checked').text,
-    glycemie: '1.8', // À récupérer du formulaire
-    traitement: document.querySelector('textarea').value,
-    prochaine_visite: document.querySelector('input[type="date"]').value,
-    pharmacie: 'Pharmacie Centrale'
-  };
-  
-  const resultat = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(donnees)
-  });
-  
-  const reponse = await resultat.json();
-  alert(reponse.status === 'success' ? '✅ Traitement enregistré!' : '❌ Erreur');
-});
-</script>
-    
-    <script>
-        function logout() {
-            if (confirm('Déconnexion du Point Conseil ?')) {
-                window.location.href = 'index.html';
-            }
-        }
-
-        function ajouterPatient() {
-            const nom = prompt('Nom du nouveau patient:');
-            if (nom) {
-                alert('Patient ' + nom + ' ajouté à la base');
-            }
+}
         }
     </script>
 </body>

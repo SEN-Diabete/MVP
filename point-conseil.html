@@ -162,6 +162,128 @@
     <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbwktHf6luBoFjg35oAMyzFD3DrIXy7pObmkiP5k3nG3xffw3jIJPUJVF3Ef3_BAbt2Z/exec';
 
+// VÉRIFICATION DE CONNEXION AU CHARGEMENT
+document.addEventListener('DOMContentLoaded', function() {
+  const user = JSON.parse(localStorage.getItem('user'));
+  
+  if (!user || !user.id) {
+    window.location.href = 'index.html';
+    return;
+  }
+  
+  // Afficher les infos utilisateur
+  console.log('Utilisateur connecté:', user);
+  
+  // CHARGER LA LISTE DES PATIENTS
+  chargerListePatients();
+});
+
+// FONCTION POUR CHARGER LES PATIENTS
+function chargerListePatients() {
+  // Simulation - À remplacer par appel API réel
+  const patients = [
+    { id: 'PAT_001', nom: 'Moussa Diop', telephone: '771234567' },
+    { id: 'PAT_002', nom: 'Aminata Sow', telephone: '772345678' },
+    { id: 'PAT_003', nom: 'Ibrahima Fall', telephone: '773456789' }
+  ];
+  
+  // Mettre à jour la liste des patients
+  const selectPatient = document.querySelector('#formTraitement select');
+  if (selectPatient) {
+    selectPatient.innerHTML = '<option value="">Choisir un patient...</option>';
+    patients.forEach(patient => {
+      const option = document.createElement('option');
+      option.value = patient.id;
+      option.textContent = patient.nom + ' (' + patient.telephone + ')';
+      selectPatient.appendChild(option);
+    });
+  }
+  
+  // Mettre à jour la liste dans la section patients
+  const listePatients = document.getElementById('listePatients');
+  if (listePatients) {
+    listePatients.innerHTML = patients.map(patient => `
+      <div class="patient-item">
+        <strong>${patient.nom}</strong> 
+        <br><small>📞 ${patient.telephone}</small>
+        <div class="mt-1">
+          <button class="btn btn-sm btn-outline-primary" onclick="voirPatient('${patient.id}')">📊 Suivi</button>
+          <button class="btn btn-sm btn-outline-success" onclick="creerOrdonnance('${patient.id}')">💊 Ordonnance</button>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+// FONCTIONS DES BOUTONS
+function ajouterPatient() {
+  const nom = prompt('Nom du nouveau patient:');
+  const telephone = prompt('Téléphone du patient:');
+  
+  if (nom && telephone) {
+    // Ici, appeler l'API pour ajouter le patient
+    alert('Patient ' + nom + ' ajouté avec succès!');
+    chargerListePatients(); // Recharger la liste
+  }
+}
+
+function voirPatient(patientId) {
+  alert('Ouvrir le dossier du patient: ' + patientId);
+  // Rediriger vers une page de détail ou ouvrir un modal
+}
+
+function creerOrdonnance(patientId) {
+  const patientSelect = document.querySelector('#formTraitement select');
+  if (patientSelect) {
+    patientSelect.value = patientId;
+    alert('Patient sélectionné pour ordonnance!');
+  }
+}
+
+// GESTION DU FORMULAIRE DE TRAITEMENT
+document.getElementById('formTraitement').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const patientSelect = this.querySelector('select');
+  const traitementTextarea = this.querySelector('textarea');
+  const dateInput = this.querySelector('input[type="date"]');
+  
+  if (!patientSelect.value) {
+    alert('Veuillez sélectionner un patient');
+    return;
+  }
+  
+  const donnees = {
+    action: 'visite_pharmacien',
+    id_patient: patientSelect.value,
+    nom_patient: patientSelect.options[patientSelect.selectedIndex].text,
+    traitement: traitementTextarea.value,
+    prochaine_visite: dateInput.value,
+    pharmacie: 'Pharmacie Centrale' // À récupérer de l'utilisateur connecté
+  };
+  
+  try {
+    const resultat = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(donnees)
+    });
+    
+    const reponse = await resultat.json();
+    alert(reponse.status === 'success' ? '✅ Traitement enregistré!' : '❌ Erreur: ' + reponse.message);
+    
+    if (reponse.status === 'success') {
+      this.reset();
+    }
+  } catch (error) {
+    alert('❌ Erreur de connexion');
+  }
+});
+
+function logout() {
+  localStorage.removeItem('user');
+  window.location.href = 'index.html';
+}      
 document.getElementById('formTraitement').addEventListener('submit', async function(e) {
   e.preventDefault();
   

@@ -104,32 +104,40 @@ document.getElementById('formPatient').addEventListener('submit', async function
     poids: poids
   };
 
-  try {
-    console.log('🔄 Envoi vers API...');
-    const resultat = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(donnees)
-    });
-    
-    console.log('✅ Réponse reçue');
-    const reponse = await resultat.json();
-    console.log('📨 Réponse API:', reponse);
-    
-    if (reponse.status === 'success') {
-      document.getElementById('resultat').innerHTML = 
-        '<div class="alert alert-success">✅ Données envoyées avec succès!<br><small>Ligne ajoutée dans Sheets</small></div>';
-      this.reset();
-    } else {
-      document.getElementById('resultat').innerHTML = 
-        '<div class="alert alert-danger">❌ Erreur API: ' + reponse.message + '</div>';
-    }
-  } catch (error) {
-    console.error('❌ Erreur fetch:', error);
-    document.getElementById('resultat').innerHTML = 
-      '<div class="alert alert-danger">❌ Erreur réseau: ' + error.message + '</div>';
+try {
+  console.log('🔄 Envoi vers API...');
+  const resultat = await fetch(API_URL, {
+    method: 'POST',
+    mode: 'cors', // ⬅️ AJOUT IMPORTANT
+    headers: { 
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify(donnees)
+  });
+  
+  // Vérifier si la réponse est OK
+  if (!resultat.ok) {
+    throw new Error(`Erreur HTTP: ${resultat.status}`);
   }
-
+  
+  console.log('✅ Réponse reçue');
+  const reponse = await resultat.json();
+  console.log('📨 Réponse API:', reponse);
+  
+  if (reponse.status === 'success') {
+    document.getElementById('resultat').innerHTML = 
+      '<div class="alert alert-success">✅ Données envoyées avec succès!<br><small>Ligne ajoutée dans Sheets</small></div>';
+    this.reset();
+  } else {
+    document.getElementById('resultat').innerHTML = 
+      '<div class="alert alert-danger">❌ Erreur API: ' + reponse.message + '</div>';
+  }
+} catch (error) {
+  console.error('❌ Erreur fetch:', error);
+  document.getElementById('resultat').innerHTML = 
+    '<div class="alert alert-danger">❌ Erreur CORS/Réseau: ' + error.message + '<br><small>Vérifiez votre connexion</small></div>';
+}
   button.innerHTML = '🚀 Envoyer la glycémie';
   button.disabled = false;
 });

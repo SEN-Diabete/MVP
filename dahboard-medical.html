@@ -166,9 +166,8 @@
             </div>
         </div>
     </div>
-
-    <script>
-const API_URL = 'https://script.google.com/macros/s/VOTRE_ID/exec';
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbwktHf6luBoFjg35oAMyzFD3DrIXy7pObmkiP5k3nG3xffw3jIJPUJVF3Ef3_BAbt2Z/exec';
 
 // VÉRIFICATION DE CONNEXION
 document.addEventListener('DOMContentLoaded', function() {
@@ -179,10 +178,7 @@ document.addEventListener('DOMContentLoaded', function() {
     return;
   }
   
-  // Afficher les infos utilisateur
-  document.getElementById('userInfo').innerHTML = `
-    <small class="text-white">Connecté en tant que: <strong>${user.nom}</strong> - ${user.structure}</small>
-  `;
+  console.log('Médecin connecté:', user);
   
   // CHARGER TOUTES LES DONNÉES DYNAMIQUES
   chargerDonneesMedicales();
@@ -194,7 +190,6 @@ async function chargerDonneesMedicales() {
     await chargerKPIMedecin();
     await chargerPatientsMedecin();
     await chargerGlycemiesRecuesMedecin();
-    await chargerOrdonnancesRecentess();
     
   } catch (error) {
     console.error('Erreur chargement données médicales:', error);
@@ -204,21 +199,20 @@ async function chargerDonneesMedicales() {
 // CHARGER LES KPI MÉDECIN DYNAMIQUES
 async function chargerKPIMedecin() {
   try {
-    // Simulation - À remplacer par appel API réel
-    const kpiData = {
-      patients: 42,
-      critiques: 5,
-      rdvAujourdhui: 3,
-      glycemiesRecues: 8
-    };
+    const response = await fetch(API_URL + '?action=get_dashboard_medecin');
+    const result = await response.json();
     
-    document.getElementById('kpiPatients').textContent = kpiData.patients;
-    document.getElementById('kpiCritiques').textContent = kpiData.critiques;
-    document.getElementById('kpiRDV').textContent = kpiData.rdvAujourdhui;
-    document.getElementById('kpiGlycemiesRecues').textContent = kpiData.glycemiesRecues;
-    
+    if (result.status === 'success') {
+      document.getElementById('kpiPatients').textContent = result.data.patients;
+      document.getElementById('kpiCritiques').textContent = result.data.critiques;
+      document.getElementById('kpiRDV').textContent = result.data.rdvAujourdhui;
+      document.getElementById('kpiGlycemiesRecues').textContent = result.data.glycemiesRecues;
+    }
   } catch (error) {
     console.error('Erreur KPI médecin:', error);
+    // Valeurs par défaut
+    document.getElementById('kpiPatients').textContent = '0';
+    document.getElementById('kpiCritiques').textContent = '0';
   }
 }
 
@@ -240,12 +234,15 @@ async function chargerPatientsMedecin() {
 function mettreAJourTableauPatients(patients) {
   const tbody = document.querySelector('#patients table tbody');
   
-  if (!tbody) return;
+  if (!tbody) {
+    console.error('Tableau patients non trouvé');
+    return;
+  }
   
   if (patients.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" class="text-center text-muted">
+        <td colspan="5" class="text-center text-muted">
           Aucun patient dans votre suivi
         </td>
       </tr>
@@ -259,17 +256,17 @@ function mettreAJourTableauPatients(patients) {
         </td>
         <td>${patient.age || 'N/A'} ans</td>
         <td>
-          <span class="badge bg-success">1.4 g/L</span><br>
-          <small class="text-muted">15/05/2023</small>
+          <span class="badge bg-success">À mesurer</span><br>
+          <small class="text-muted">--/--/----</small>
         </td>
         <td>
-          <span class="badge bg-success">Contrôlé</span>
+          <span class="badge bg-secondary">Nouveau</span>
         </td>
         <td>
           <button class="btn btn-sm btn-outline-primary" onclick="ouvrirDossier('${patient.id}')">
             📁 Dossier
           </button>
-          <button class="btn btn-sm btn-outline-success" onclick="genererOrdonnance('${patient.id}')">
+          <button class="btn btn-sm btn-outline-success" onclick="genererOrdonnance('${patient.id}', '${patient.nom}')">
             💊 Ordonnance
           </button>
         </td>
@@ -285,11 +282,7 @@ async function chargerGlycemiesRecuesMedecin() {
     const result = await response.json();
     
     if (result.status === 'success') {
-      // Filtrer seulement celles destinées au médecin
-      const glycemiesMedecin = result.data.filter(g => 
-        g.destination === 'medecin' || g.destination === 'médecin'
-      );
-      mettreAJourGlycemiesMedecin(glycemiesMedecin);
+      mettreAJourGlycemiesMedecin(result.data);
     }
   } catch (error) {
     console.error('Erreur glycémies médecin:', error);
@@ -298,94 +291,72 @@ async function chargerGlycemiesRecuesMedecin() {
 
 // METTRE À JOUR L'AFFICHAGE DES GLYCÉMIES MÉDECIN
 function mettreAJourGlycemiesMedecin(glycemies) {
-  const containerReception = document.getElementById('reception');
-  const containerAlertes = document.getElementById('listeAlertes');
+  const containerReception = document.querySelector('#reception .card-body');
   
-  if (!containerReception && !containerAlertes) return;
+  if (!containerReception) {
+    console.error('Container réception non trouvé');
+    return;
+  }
   
-  const glycemiesHTML = glycemies.map(glycemie => {
-    const date = new Date(glycemie.date).toLocaleDateString('fr-FR');
-    const isUrgent = glycemie.glycemie < 0.7 || glycemie.glycemie > 2.5;
-    const badgeClass = isUrgent ? 'danger' : 'info';
-    
-    return `
-      <div class="alert alert-${isUrgent ? 'danger' : 'info'}">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <strong>${glycemie.patient}</strong> - ${glycemie.glycemie} g/L
-            <br><small class="text-muted">Reçu le ${date}</small>
-            ${glycemie.commentaire ? `<br><small>💬 ${glycemie.commentaire}</small>` : ''}
+  if (glycemies.length === 0) {
+    containerReception.innerHTML = '<div class="alert alert-info">Aucune glycémie reçue</div>';
+  } else {
+    containerReception.innerHTML = glycemies.map(glycemie => {
+      const date = new Date(glycemie.date).toLocaleDateString('fr-FR');
+      const isUrgent = glycemie.glycemie < 0.7 || glycemie.glycemie > 2.5;
+      
+      return `
+        <div class="alert alert-${isUrgent ? 'danger' : 'info'} mb-3">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <strong>${glycemie.patient}</strong> - ${glycemie.glycemie} g/L
+              <br><small class="text-muted">Reçu le ${date}</small>
+              ${glycemie.commentaire ? `<br><small>💬 ${glycemie.commentaire}</small>` : ''}
+            </div>
+            <span class="badge bg-${isUrgent ? 'danger' : 'info'}">${isUrgent ? 'URGENT' : 'Nouveau'}</span>
           </div>
-          <span class="badge bg-${badgeClass}">${isUrgent ? 'URGENT' : 'Nouveau'}</span>
+          <div class="mt-2">
+            <button class="btn btn-sm btn-primary" onclick="consulterGlycemie('${glycemie.patient}', ${glycemie.glycemie})">
+              👁️ Consulter
+            </button>
+            <button class="btn btn-sm btn-success" onclick="programmerRdv('${glycemie.patient}')">
+              📅 RDV
+            </button>
+          </div>
         </div>
-        <div class="mt-2">
-          <button class="btn btn-sm btn-primary" onclick="consulterGlycemie('${glycemie.patient}', ${glycemie.glycemie})">
-            👁️ Consulter
-          </button>
-          <button class="btn btn-sm btn-success" onclick="programmerRdv('${glycemie.patient}')">
-            📅 RDV
-          </button>
-          ${isUrgent ? `
-          <button class="btn btn-sm btn-warning" onclick="contacterUrgence('${glycemie.patient}')">
-            🚨 Urgence
-          </button>
-          ` : ''}
-        </div>
-      </div>
-    `;
-  }).join('');
-  
-  if (containerReception) {
-    containerReception.innerHTML = glycemiesHTML || '<div class="alert alert-info">Aucune glycémie reçue</div>';
+      `;
+    }).join('');
   }
-  
-  if (containerAlertes) {
-    const alertesUrgentes = glycemies.filter(g => g.glycemie < 0.7 || g.glycemie > 2.5);
-    containerAlertes.innerHTML = alertesUrgentes.map(alerte => `
-      <div class="alert alert-warning">
-        <strong>⚠️ Alerte:</strong> ${alerte.patient}<br>
-        <small>Glycémie: ${alerte.glycemie} g/L - ${new Date(alerte.date).toLocaleDateString()}</small>
-      </div>
-    `).join('') || '<div class="alert alert-success">Aucune alerte urgente</div>';
-  }
-}
-
-// CHARGER LES ORDONNANCES RÉCENTES
-async function chargerOrdonnancesRecentess() {
-  // Simulation - À implémenter avec appel API
-  const ordonnances = [
-    { id: 'ORD_001', patient: 'Moussa Diop', date: '2023-05-10', medicaments: 'Metformine 500mg' },
-    { id: 'ORD_002', patient: 'Aminata Sow', date: '2023-05-12', medicaments: 'Insuline + Metformine' }
-  ];
-  
-  // Mettre à jour l'interface si nécessaire
 }
 
 // FONCTIONS DES BOUTONS MÉDECIN
 function ouvrirDossier(patientId) {
   alert(`Ouvrir le dossier médical de: ${patientId}`);
-  // Redirection vers page détail patient
 }
 
-function genererOrdonnance(patientId) {
-  // Pré-remplir le formulaire d'ordonnance
-  const ongletOrdonnances = document.querySelector('#ordonnances-tab');
-  if (ongletOrdonnances) {
-    ongletOrdonnances.click(); // Basculer vers l'onglet ordonnances
+function genererOrdonnance(patientId, patientNom) {
+  const selectPatient = document.querySelector('#ordonnances select');
+  if (selectPatient) {
+    // Créer option si elle n'existe pas
+    const existingOption = Array.from(selectPatient.options).find(opt => opt.value === patientId);
+    if (!existingOption) {
+      const newOption = document.createElement('option');
+      newOption.value = patientId;
+      newOption.textContent = patientNom;
+      selectPatient.appendChild(newOption);
+    }
+    selectPatient.value = patientId;
     
-    // Pré-remplir avec le patient sélectionné
-    setTimeout(() => {
-      const selectPatient = document.querySelector('#formOrdonnance select');
-      if (selectPatient) {
-        selectPatient.value = patientId;
-      }
-    }, 100);
+    // Basculer vers l'onglet ordonnances
+    const ongletOrdonnances = document.querySelector('#ongletsMedecin button[data-bs-target="#ordonnances"]');
+    if (ongletOrdonnances) {
+      ongletOrdonnances.click();
+    }
   }
 }
 
 function consulterGlycemie(patient, glycemie) {
   alert(`Consultation glycémie:\nPatient: ${patient}\nValeur: ${glycemie} g/L`);
-  // Ouvrir modal détaillé
 }
 
 function programmerRdv(patient) {
@@ -394,98 +365,59 @@ function programmerRdv(patient) {
   
   if (date && heure) {
     alert(`✅ RDV programmé pour ${patient}\n📅 ${date} à ${heure}`);
-    
-    // Envoyer à l'API
-    const donnees = {
-      action: 'programmer_rdv',
-      patient: patient,
-      date: date,
-      heure: heure,
-      medecin: JSON.parse(localStorage.getItem('user')).nom
-    };
-    
-    // fetch(API_URL, { method: 'POST', body: JSON.stringify(donnees) })
   }
-}
-
-function contacterUrgence(patient) {
-  const message = `🚨 URGENCE MÉDICALE\nPatient: ${patient}\nMédecin: ${JSON.parse(localStorage.getItem('user')).nom}\nContactez immédiatement!`;
-  const lienWhatsApp = `https://wa.link/?text=${encodeURIComponent(message)}`;
-  window.open(lienWhatsApp, '_blank');
 }
 
 // GESTION DU FORMULAIRE D'ORDONNANCE
-document.getElementById('formOrdonnance').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  
-  const patientSelect = this.querySelector('select');
-  const medicamentsTextarea = this.querySelector('textarea');
-  const instructionsTextarea = this.querySelectorAll('textarea')[1];
-  const dateControle = this.querySelector('input[type="date"]');
-  
-  if (!patientSelect.value || !medicamentsTextarea.value) {
-    alert('Veuillez remplir le patient et les médicaments');
-    return;
-  }
-  
-  const donnees = {
-    action: 'ordonnance_medecin',
-    id_patient: patientSelect.value,
-    nom_patient: patientSelect.options[patientSelect.selectedIndex].text,
-    medicaments: medicamentsTextarea.value,
-    posologie: instructionsTextarea.value,
-    duree: '30 jours',
-    medecin: JSON.parse(localStorage.getItem('user')).nom,
-    prochain_controle: dateControle.value
-  };
-  
-  try {
-    const resultat = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(donnees)
-    });
-    
-    const reponse = await resultat.json();
-    
-    if (reponse.status === 'success') {
-      alert('✅ Ordonnance générée avec succès!');
-      this.reset();
+document.addEventListener('DOMContentLoaded', function() {
+  const formOrdonnance = document.querySelector('#ordonnances form');
+  if (formOrdonnance) {
+    formOrdonnance.addEventListener('submit', async function(e) {
+      e.preventDefault();
       
-      // Option: Générer PDF ou envoyer par WhatsApp
-      if (confirm('Voulez-vous envoyer cette ordonnance par WhatsApp?')) {
-        const message = `📄 Ordonnance SEN'Diabète\nPatient: ${donnees.nom_patient}\nMédicaments: ${donnees.medicaments}\nMédecin: ${donnees.medecin}`;
-        const lienWhatsApp = `https://wa.link/?text=${encodeURIComponent(message)}`;
-        window.open(lienWhatsApp, '_blank');
+      const patientSelect = this.querySelector('select');
+      const medicamentsTextarea = this.querySelector('textarea');
+      
+      if (!patientSelect.value || !medicamentsTextarea.value) {
+        alert('Veuillez remplir le patient et les médicaments');
+        return;
       }
-    } else {
-      alert('❌ Erreur: ' + reponse.message);
-    }
-  } catch (error) {
-    alert('❌ Erreur de connexion');
+      
+      const donnees = {
+        action: 'ordonnance_medecin',
+        id_patient: patientSelect.value,
+        nom_patient: patientSelect.options[patientSelect.selectedIndex].text,
+        medicaments: medicamentsTextarea.value,
+        medecin: JSON.parse(localStorage.getItem('user')).nom
+      };
+      
+      try {
+        const resultat = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(donnees)
+        });
+        
+        const reponse = await resultat.json();
+        
+        if (reponse.status === 'success') {
+          alert('✅ Ordonnance enregistrée avec succès!');
+          this.reset();
+        } else {
+          alert('❌ Erreur: ' + reponse.message);
+        }
+      } catch (error) {
+        alert('❌ Erreur de connexion');
+      }
+    });
   }
-});
-
-// BOUTON IMPRIMER
-document.getElementById('print-prescription').addEventListener('click', function() {
-  alert('🖨️ Fonction d\'impression - À implémenter');
-  // Logique d'impression de l'ordonnance
 });
 
 function logout() {
   localStorage.removeItem('user');
   window.location.href = 'index.html';
 }
-
-// ACTIVER LES ONGLETS BOOTSTRAP
-var triggerTabList = [].slice.call(document.querySelectorAll('#ongletsMedecin button'))
-triggerTabList.forEach(function (triggerEl) {
-  var tabTrigger = new bootstrap.Tab(triggerEl)
-  triggerEl.addEventListener('click', function (event) {
-    event.preventDefault()
-    tabTrigger.show()
-  })
-});
-    </script>
+</script>
+    
 </body>
 </html>
